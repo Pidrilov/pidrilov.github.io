@@ -94,3 +94,29 @@ button.exit{background:#333;}
     text-align:right;
     pointer-events:none;
 }
+
+/* ===== EMOJI BACKGROUND ===== */
+body::before{
+    content:"🎮 ✨ 💜 🔥 ⭐";
+    position:fixed;
+    inset:0;
+    font-size:48px;
+    opacity:0.03;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    white-space:pre-wrap;
+    text-align:center;
+}
+
+body.light::before{
+    content:"☀️ ✨ 📘 💡";
+    opacity:0.04;
+}
+
+body.neon::before{
+    content:"💜 ⚡ 🌌 🔮";
+    opacity:0.05;
+}
+

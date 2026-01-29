@@ -1,64 +1,162 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<title>Генератор</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Генератор никнеймов и паролей онлайн</title>
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0f0f0f;
+    color:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
 
-    <meta name="description" content="Бесплатный онлайн генератор никнеймов и паролей. Игровые ники, YouTube-стили, тёмная и светлая тема.">
-    <meta name="keywords" content="генератор ников, генератор паролей, никнеймы, игровые ники, nickname generator">
-    <meta name="author" content="Pidrilov">
+.card{
+    width:360px;
+    background:#1c1c1c;
+    border-radius:16px;
+    padding:24px;
+    box-shadow:0 20px 40px rgba(0,0,0,.6);
+    position:relative;
+}
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+.tabs{
+    display:flex;
+    background:#2a2a2a;
+    border-radius:10px;
+    overflow:hidden;
+    margin-bottom:16px;
+}
 
-    <!-- Open Graph (для ссылок в соцсетях) -->
-    <meta property="og:title" content="Генератор никнеймов и паролей">
-    <meta property="og:description" content="Создавай игровые никнеймы и надёжные пароли онлайн бесплатно">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://pidrilov.github.io">
+.tab{
+    flex:1;
+    text-align:center;
+    padding:10px;
+    cursor:pointer;
+    color:#aaa;
+}
 
-    <link rel="icon" href="favicon.ico">
-    <link rel="stylesheet" href="style.css">
+.tab.active{
+    background:#bb86fc;
+    color:#000;
+    font-weight:bold;
+}
+
+input,select,button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border-radius:8px;
+    border:none;
+}
+
+input,select{
+    background:#2a2a2a;
+    color:#fff;
+}
+
+button{
+    background:#bb86fc;
+    color:#000;
+    cursor:pointer;
+}
+
+.secondary{
+    background:#333;
+    color:#fff;
+}
+
+.error{
+    font-size:12px;
+    color:#ff6b6b;
+    margin-top:4px;
+    min-height:16px;
+}
+
+.hidden{display:none;}
+
+.timer{
+    position:absolute;
+    top:10px;
+    right:14px;
+    font-size:13px;
+    color:#bb86fc;
+}
+
+.result{
+    background:#2a2a2a;
+    padding:8px;
+    margin-top:10px;
+    border-radius:6px;
+    word-break:break-all;
+}
+</style>
 </head>
 
 <body>
 
-<div class="card">
-
-    <div class="theme-toggle" onclick="toggleTheme()">🌙</div>
-
+<!-- AUTH -->
+<div class="card" id="auth">
     <div class="tabs">
-        <div class="tab active" id="tabNick" onclick="switchTab('nick')">Ник</div>
-        <div class="tab" id="tabPass" onclick="switchTab('pass')">Пароль</div>
+        <div class="tab active" id="tabReg" onclick="showReg()">Регистрация</div>
+        <div class="tab" id="tabLogin" onclick="showLogin()">Вход</div>
     </div>
 
-    <!-- НИК -->
-    <div class="section active" id="nickSection">
-        <input type="text" id="nameInput" placeholder="Введи имя">
-
-        <select id="styleSelect">
-            <option value="game">🎮 Игровой</option>
-            <option value="media">📺 YouTube / TikTok</option>
-            <option value="short">⚡ Короткий</option>
-        </select>
-
-        <button onclick="generateNickname()">Сгенерировать ник</button>
-
-        <div class="result" id="nicknameResult"></div>
-        <button class="copy-btn" onclick="copyText('nicknameResult')">Скопировать</button>
+    <div id="regBox">
+        <input id="regLogin" placeholder="Логин">
+        <div class="error" id="regError"></div>
+        <input id="regPass" type="password" placeholder="Пароль">
+        <button onclick="register()">Создать аккаунт</button>
     </div>
 
-    <!-- ПАРОЛЬ -->
-    <div class="section" id="passSection">
-        <button onclick="generatePassword()">Сгенерировать пароль</button>
-
-        <div class="result" id="passwordResult"></div>
-        <button class="copy-btn" onclick="copyText('passwordResult')">Скопировать</button>
+    <div id="loginBox" class="hidden">
+        <input id="loginLogin" placeholder="Логин">
+        <input id="loginPass" type="password" placeholder="Пароль">
+        <button onclick="login()">Войти</button>
     </div>
 
+    <button class="secondary" onclick="createTemp()" style="margin-top:14px">
+        Временный аккаунт (30 минут)
+    </button>
+</div>
+
+<!-- APP -->
+<div class="card hidden" id="app">
+    <div class="timer hidden" id="timer"></div>
+
+    <input id="nameInput" placeholder="Основа ника">
+
+    <select id="styleSelect">
+        <option value="game">Игровой</option>
+        <option value="media">Медиа</option>
+        <option value="short">Короткий</option>
+    </select>
+
+    <select id="caseSelect">
+        <option value="normal">Aa</option>
+        <option value="upper">AA</option>
+        <option value="lower">aa</option>
+        <option value="random">aA</option>
+    </select>
+
+    <button onclick="generateNickname()">Сгенерировать ник</button>
+    <button class="secondary" onclick="toggleHistory()">История ников</button>
+<div class="result hidden" id="historyBox"></div>
+
+    <div class="result" id="nicknameResult"></div>
+
+    <button onclick="generatePassword()">Сгенерировать пароль</button>
+    <div class="result" id="passwordResult"></div>
+
+    <button class="secondary" onclick="logout()">Выйти</button>
 </div>
 
 <script src="script.js"></script>
 </body>
 </html>
-

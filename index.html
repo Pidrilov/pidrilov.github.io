@@ -6,31 +6,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+*{box-sizing:border-box}
 body{
     margin:0;
     font-family:Arial, sans-serif;
-    background:#0f0f12;
+    background:#0e0e12;
     color:#fff;
     display:flex;
     justify-content:center;
     align-items:center;
     height:100vh;
+    overflow:hidden;
+}
+
+/* ===== EMOJI BACKGROUND ===== */
+body::before{
+    content:"🎮 ✨ 💜 🔥 ⭐ 😈 ⚡";
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:56px;
+    opacity:0.04;
+    pointer-events:none;
+    text-align:center;
+    white-space:pre-wrap;
 }
 
 .card{
-    background:#1b1b1f;
-    padding:25px;
-    border-radius:16px;
-    width:340px;
+    width:360px;
+    background:#1b1b20;
+    padding:24px;
+    border-radius:18px;
     box-shadow:0 0 40px rgba(0,0,0,.6);
+    position:relative;
+    z-index:1;
 }
+
+.hidden{display:none}
 
 .tabs{
     display:flex;
-    background:#2a2a2e;
+    background:#2a2a30;
     border-radius:12px;
     overflow:hidden;
-    margin-bottom:15px;
+    margin-bottom:16px;
 }
 
 .tabs button{
@@ -40,6 +61,7 @@ body{
     background:none;
     color:#aaa;
     cursor:pointer;
+    font-size:14px;
 }
 
 .tabs button.active{
@@ -47,13 +69,13 @@ body{
     color:#000;
 }
 
-input, select, button{
+input,select,button{
     width:100%;
     padding:10px;
     margin:6px 0;
     border:none;
     border-radius:10px;
-    background:#2a2a2e;
+    background:#2a2a30;
     color:#fff;
 }
 
@@ -67,20 +89,29 @@ button.main{
 .error{
     color:#ff6b6b;
     font-size:12px;
+    min-height:14px;
+}
+
+.result{
+    margin-top:8px;
+    padding:8px;
+    background:#2a2a30;
+    border-radius:8px;
+    text-align:center;
 }
 
 .history{
     display:none;
-    margin-top:8px;
     font-size:13px;
     opacity:.85;
+    margin-top:6px;
 }
 
 .footer{
     position:fixed;
-    right:15px;
-    bottom:15px;
-    font-size:12px;
+    right:14px;
+    bottom:14px;
+    font-size:11px;
     opacity:.5;
     text-align:right;
 }
@@ -89,42 +120,51 @@ button.main{
 
 <body>
 
-<div class="card">
+<!-- ===== AUTH ===== -->
+<div class="card" id="authCard">
 
-<div class="tabs">
-    <button id="tabReg" class="active" onclick="showRegister()">Регистрация</button>
-    <button id="tabLogin" onclick="showLogin()">Вход</button>
+    <div class="tabs">
+        <button id="tabReg" class="active" onclick="showRegister()">Регистрация</button>
+        <button id="tabLogin" onclick="showLogin()">Вход</button>
+    </div>
+
+    <div id="registerBox">
+        <input id="regLogin" placeholder="Логин">
+        <input id="regPass" type="password" placeholder="Пароль">
+        <div class="error" id="regError"></div>
+        <button class="main" onclick="register()">Создать аккаунт</button>
+    </div>
+
+    <div id="loginBox" class="hidden">
+        <input id="logLogin" placeholder="Логин">
+        <input id="logPass" type="password" placeholder="Пароль">
+        <div class="error" id="logError"></div>
+        <button class="main" onclick="login()">Войти</button>
+    </div>
+
 </div>
 
-<!-- РЕГИСТРАЦИЯ -->
-<div id="registerBox">
-    <input id="regLogin" placeholder="Логин">
-    <input id="regPass" type="password" placeholder="Пароль">
-    <div class="error" id="regError"></div>
-    <button class="main" onclick="register()">Создать аккаунт</button>
-</div>
+<!-- ===== GENERATOR ===== -->
+<div class="card hidden" id="genCard">
 
-<!-- ВХОД -->
-<div id="loginBox" style="display:none">
-    <input id="logLogin" placeholder="Логин">
-    <input id="logPass" type="password" placeholder="Пароль">
-    <button class="main" onclick="login()">Войти</button>
-</div>
+    <h3 style="margin-top:0">Генератор</h3>
 
-<hr style="opacity:.1;margin:15px 0">
+    <input id="base" placeholder="Основа ника">
+    <select id="style">
+        <option value="game">Игровой</option>
+        <option value="cool">Крутой</option>
+    </select>
 
-<!-- ГЕНЕРАТОР -->
-<input id="base" placeholder="Основа ника">
-<select id="style">
-    <option value="game">Игровой</option>
-    <option value="cool">Крутой</option>
-</select>
+    <button class="main" onclick="genNick()">Сгенерировать ник</button>
+    <div class="result" id="nickResult">—</div>
 
-<button class="main" onclick="genNick()">Сгенерировать ник</button>
-<button onclick="toggleHistory()">🕘 История</button>
-<div class="history" id="history"></div>
+    <button onclick="toggleHistory()">🕘 История</button>
+    <div class="history" id="history"></div>
 
-<button class="main" onclick="genPass()">Сгенерировать пароль</button>
+    <button class="main" onclick="genPass()">Сгенерировать пароль</button>
+    <div class="result" id="passResult">—</div>
+
+    <button onclick="logout()">Выйти</button>
 
 </div>
 

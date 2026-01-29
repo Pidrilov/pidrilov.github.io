@@ -1,89 +1,183 @@
-function random(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+function $(id){return document.getElementById(id);}
+
+/* ---------- UI ---------- */
+function showReg(){
+    $("regBox").classList.remove("hidden");
+    $("loginBox").classList.add("hidden");
+    $("tabReg").classList.add("active");
+    $("tabLogin").classList.remove("active");
 }
 
-function formatBase(text) {
-    if (!text) return "Player";
-    return text.charAt(0).toUpperCase() + text.slice(1);
+function showLogin(){
+    $("loginBox").classList.remove("hidden");
+    $("regBox").classList.add("hidden");
+    $("tabLogin").classList.add("active");
+    $("tabReg").classList.remove("active");
 }
 
-/* вкладки */
-function switchTab(tab) {
-    const nickTab = document.getElementById("tabNick");
-    const passTab = document.getElementById("tabPass");
-    const nickSection = document.getElementById("nickSection");
-    const passSection = document.getElementById("passSection");
+/* ---------- VALIDATION ---------- */
+function validateLogin(login){
+    if(/[А-Яа-яЁё]/.test(login)) return "Нельзя использовать русские буквы";
+    if(/\s/.test(login)) return "Нельзя использовать пробелы";
+    if(!/^[a-zA-Z0-9_]+$/.test(login)) return "Разрешены: a-z A-Z 0-9 _";
+    if(login.length < 3) return "Минимум 3 символа";
+    return "";
+}
 
-    if (tab === "nick") {
-        nickTab.classList.add("active");
-        passTab.classList.remove("active");
-        nickSection.classList.add("active");
-        passSection.classList.remove("active");
-    } else {
-        passTab.classList.add("active");
-        nickTab.classList.remove("active");
-        passSection.classList.add("active");
-        nickSection.classList.remove("active");
+/* ---------- AUTH ---------- */
+function register(){
+    const login = $("regLogin").value.trim();
+    const pass = $("regPass").value.trim();
+    const err = validateLogin(login);
+    $("regError").innerText = err;
+    if(err || !pass) return;
+
+    localStorage.setItem("account", JSON.stringify({
+        login, pass, expires:null
+    }));
+    localStorage.setItem("auth","true");
+    init();
+}
+
+function createTemp(){
+    localStorage.setItem("account", JSON.stringify({
+        login:"Temp"+Math.floor(Math.random()*10000),
+        pass:"",
+        expires:Date.now()+30*60*1000
+    }));
+    localStorage.setItem("auth","true");
+    init();
+}
+
+function login(){
+    const l = $("loginLogin").value.trim();
+    const p = $("loginPass").value.trim();
+    const acc = JSON.parse(localStorage.getItem("account"));
+    if(!acc || acc.login!==l || acc.pass!==p) return;
+    localStorage.setItem("auth","true");
+    init();
+}
+
+function logout(){
+    localStorage.removeItem("auth");
+    init();
+}
+
+/* ---------- TIMER ---------- */
+function startTimer(exp){
+    const t = $("timer");
+    t.classList.remove("hidden");
+    setInterval(()=>{
+        const left = exp - Date.now();
+        if(left<=0){
+            localStorage.clear();
+            location.reload();
+        }
+        const m = Math.floor(left/60000);
+        const s = Math.floor((left%60000)/1000);
+        t.innerText = `Осталось ${m}:${s.toString().padStart(2,"0")}`;
+    },1000);
+}
+
+/* ---------- GENERATOR ---------- */
+function randFrom(a){return a[Math.floor(Math.random()*a.length)];}
+
+function generateNickname(){
+    const baseInput = $("nameInput").value.trim();
+    const base = baseInput || "player";
+
+    const prefixes = ["x","real","dark","neo","pro","its","mr",""];
+    const suffixes = ["gg","tv","xd","fps","lol","yt",""];
+    const numbers = ["7","9","13","21","77","99","1337",""];
+
+    function stylize(text){
+        return text
+            .replace(/a/gi, () => Math.random() > 0.7 ? "4" : "a")
+            .replace(/e/gi, () => Math.random() > 0.7 ? "3" : "e")
+            .replace(/o/gi, () => Math.random() > 0.7 ? "0" : "o")
+            .replace(/i/gi, () => Math.random() > 0.8 ? "1" : "i");
+    }
+
+    let nick =
+        randFrom(prefixes) +
+        stylize(base) +
+        randFrom(suffixes) +
+        randFrom(numbers);
+
+    const mode = $("caseSelect").value;
+    if(mode === "upper") nick = nick.toUpperCase();
+    if(mode === "lower") nick = nick.toLowerCase();
+    if(mode === "random"){
+        nick = nick.split("")
+            .map(c => Math.random() > 0.5 ? c.toUpperCase() : c.toLowerCase())
+            .join("");
+    }
+
+    $("nicknameResult").innerText = nick;
+    saveNickHistory(nick);
+}
+
+
+function generatePassword(){
+    const c="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
+    let p="";
+    for(let i=0;i<14;i++) p+=randFrom(c);
+    $("passwordResult").innerText=p;
+}
+
+/* ---------- INIT ---------- */
+function init(){
+    const auth=$("auth"), app=$("app"), timer=$("timer");
+    const acc=JSON.parse(localStorage.getItem("account"));
+    const ok=localStorage.getItem("auth")==="true";
+
+    if(ok && acc){
+        auth.classList.add("hidden");
+        app.classList.remove("hidden");
+        if(acc.expires) startTimer(acc.expires);
+        else timer.classList.add("hidden");
+    }else{
+        auth.classList.remove("hidden");
+        app.classList.add("hidden");
+        timer.classList.add("hidden");
     }
 }
 
-/* ники */
-function generateNickname() {
-    const base = formatBase(
-        document.getElementById("nameInput").value.trim()
-    );
-    const style = document.getElementById("styleSelect").value;
+init();
 
-    let nick = "";
+function saveNickHistory(nick){
+    let history = JSON.parse(localStorage.getItem("nickHistory")) || [];
+    history.unshift(nick);
 
-    if (style === "game") {
-        const suffixes = ["Pro", "X", "GG", "Fire", "Prime", "1337"];
-        nick = base + random(suffixes);
-    }
+    // убираем повторы
+    history = [...new Set(history)];
 
-    if (style === "media") {
-        const suffixes = ["YT", "TV", "Official", "Live"];
-        const prefixes = ["Its", "Real", ""];
-        nick = random(prefixes) + base + random(suffixes);
-    }
+    // максимум 10
+    history = history.slice(0, 10);
 
-    if (style === "short") {
-        const symbols = ["x", "_"];
-        nick = random(symbols) + base;
-    }
-
-    document.getElementById("nicknameResult").innerText = nick;
+    localStorage.setItem("nickHistory", JSON.stringify(history));
 }
 
-/* пароли */
-function generatePassword() {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
-    let pass = "";
 
-    for (let i = 0; i < 14; i++) {
-        pass += chars[Math.floor(Math.random() * chars.length)];
+function renderHistory(){
+    const box = $("historyBox");
+    let history = JSON.parse(localStorage.getItem("nickHistory")) || [];
+    if(history.length === 0){
+        box.innerHTML = "История пуста";
+        return;
     }
 
-    document.getElementById("passwordResult").innerText = pass;
+    box.innerHTML = history.map(n =>
+        `<div style="cursor:pointer" onclick="copyText('${n}')">${n}</div>`
+    ).join("");
 }
 
-/* копирование */
-function copyText(id) {
-    const text = document.getElementById(id).innerText;
-    if (!text) return;
+function toggleHistory(){
+    const box = $("historyBox");
+    box.classList.toggle("hidden");
+    renderHistory();
+}
+
+function copyText(text){
     navigator.clipboard.writeText(text);
-}
-
-/* тема */
-function toggleTheme() {
-    document.body.classList.toggle("light");
-    localStorage.setItem(
-        "theme",
-        document.body.classList.contains("light") ? "light" : "dark"
-    );
-}
-
-/* загрузка темы */
-if (localStorage.getItem("theme") === "light") {
-    document.body.classList.add("light");
 }

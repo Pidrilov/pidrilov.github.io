@@ -1,135 +1,106 @@
-/* =========================
-   VISITS (1 PER SESSION AFTER ACTION)
-   ========================= */
+/* ===== THEME ===== */
+function setTheme(t){
+    document.body.className = t;
+    localStorage.setItem("theme", t);
+}
+document.body.className = localStorage.getItem("theme") || "dark";
+
+/* ===== VISITS (1 PER SESSION AFTER ACTION) ===== */
+let visits = Number(localStorage.getItem("visits") || 0);
+let actionDone = sessionStorage.getItem("actionDone");
 
 const visitsEl = document.getElementById("visits");
+updateVisits();
 
-let visits = Number(localStorage.getItem("visits") || 0);
-let actionDone = sessionStorage.getItem("actionDone") === "true";
-
-updateVisitsUI();
-
-function registerAction() {
-    if (!actionDone) {
+function action(){
+    if(!actionDone){
         visits++;
         localStorage.setItem("visits", visits);
-        sessionStorage.setItem("actionDone", "true");
+        sessionStorage.setItem("actionDone", "1");
         actionDone = true;
-        updateVisitsUI();
+        updateVisits();
     }
 }
 
-function updateVisitsUI() {
-    if (visitsEl) {
-        visitsEl.textContent = "Visits: " + visits;
-    }
+function updateVisits(){
+    visitsEl.textContent = "Visits: " + visits;
 }
 
-/* =========================
-   AUTH TABS (ANIMATED)
-   ========================= */
-
-const registerTab = document.getElementById("register");
-const loginTab = document.getElementById("login");
-
-function showRegister() {
-    registerTab.style.display = "block";
-    loginTab.style.display = "none";
+/* ===== AUTH ===== */
+function showRegister(){
+    register.style.display="block";
+    login.style.display="none";
+    tabReg.classList.add("active");
+    tabLog.classList.remove("active");
 }
 
-function showLogin() {
-    registerTab.style.display = "none";
-    loginTab.style.display = "block";
+function showLogin(){
+    register.style.display="none";
+    login.style.display="block";
+    tabLog.classList.add("active");
+    tabReg.classList.remove("active");
 }
 
-/* =========================
-   AUTH LOGIC
-   ========================= */
-
-function register() {
-    const login = regLogin.value;
-    const pass = regPass.value;
-
-    if (/[а-яА-Я\s]/.test(login)) {
-        regError.textContent = "Нельзя использовать русские буквы или пробелы";
+function register(){
+    if(/[а-яА-Я\s]/.test(regLogin.value)){
+        regError.textContent="Русские буквы и пробелы запрещены";
         return;
     }
-
-    localStorage.setItem("user", JSON.stringify({ login, pass }));
-    auth.style.display = "none";
-    app.style.display = "block";
-
-    registerAction();
+    localStorage.setItem("user", JSON.stringify({
+        l:regLogin.value,p:regPass.value
+    }));
+    auth.style.display="none";
+    app.style.display="block";
+    action();
 }
 
-function login() {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) return;
-
-    if (logLogin.value === user.login && logPass.value === user.pass) {
-        auth.style.display = "none";
-        app.style.display = "block";
-        registerAction();
+function login(){
+    const u=JSON.parse(localStorage.getItem("user"));
+    if(!u)return;
+    if(logLogin.value===u.l && logPass.value===u.p){
+        auth.style.display="none";
+        app.style.display="block";
+        action();
     }
 }
 
-function logout() {
-    app.style.display = "none";
-    auth.style.display = "block";
+function logout(){
+    app.style.display="none";
+    auth.style.display="block";
 }
 
-/* =========================
-   NICK GENERATOR + HISTORY
-   ========================= */
+/* ===== NICK + HISTORY ===== */
+let historyArr = JSON.parse(localStorage.getItem("history")||"[]");
 
-let historyArr = JSON.parse(localStorage.getItem("nickHistory") || "[]");
-
-function generateNick() {
-    const base = baseNick.value || "";
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-    let rand = "";
-    for (let i = 0; i < 6; i++) {
-        rand += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    const nick = base + rand;
-    nickResult.textContent = nick;
+function generateNick(){
+    const chars="abcdefghijklmnopqrstuvwxyz0123456789";
+    let r="";
+    for(let i=0;i<6;i++)r+=chars[Math.random()*chars.length|0];
+    const nick=(baseNick.value||"")+r;
+    nickResult.textContent=nick;
 
     historyArr.unshift(nick);
-    if (historyArr.length > 5) historyArr.pop();
-
-    localStorage.setItem("nickHistory", JSON.stringify(historyArr));
+    if(historyArr.length>5)historyArr.pop();
+    localStorage.setItem("history",JSON.stringify(historyArr));
     renderHistory();
-
-    registerAction();
+    action();
 }
 
-function renderHistory() {
-    history.innerHTML = historyArr.join("<br>");
+function renderHistory(){
+    history.innerHTML=historyArr.join("<br>");
 }
 
-function toggleHistory() {
-    history.style.display =
-        history.style.display === "block" ? "none" : "block";
+function toggleHistory(){
+    history.style.display=history.style.display==="block"?"none":"block";
 }
 
 renderHistory();
 
-/* =========================
-   PASSWORD GENERATOR
-   ========================= */
-
-function generatePassword() {
-    const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    let pass = "";
-
-    for (let i = 0; i < 12; i++) {
-        pass += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    passResult.textContent = pass;
-
-    registerAction();
+/* ===== PASSWORD ===== */
+function generatePassword(){
+    const c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let p="";
+    for(let i=0;i<12;i++)p+=c[Math.random()*c.length|0];
+    passResult.textContent=p;
+    action();
 }
